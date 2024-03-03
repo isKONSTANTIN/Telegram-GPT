@@ -7,12 +7,7 @@ import (
 
 type Config struct {
 	Telegram TelegramConfig `json:"telegram"`
-	Database DatabaseConfig `json:"database"`
 	OpenAI   OpenAIConfig   `json:"openAI"`
-}
-
-type DatabaseConfig struct {
-	Url string `json:"url"`
 }
 
 type TelegramConfig struct {
@@ -28,9 +23,6 @@ type OpenAIConfig struct {
 
 func CreateDefault() *Config {
 	return &Config{
-		Database: DatabaseConfig{
-			Url: "postgres://tgpt:change_me@localhost:5432/tgpt",
-		},
 		Telegram: TelegramConfig{
 			TelegramToken: "XXX",
 			MainAdminId:   -1,

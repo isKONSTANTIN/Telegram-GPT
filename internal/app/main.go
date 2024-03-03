@@ -7,6 +7,7 @@ import (
 	"TelegramGPT/internal/telegram"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"os"
 )
 
 type App struct {
@@ -22,6 +23,14 @@ type App struct {
 	generator *gpt.Generator
 }
 
+func getEnv(key string, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+
+	return fallback
+}
+
 func (a *App) Start() error {
 	var err error
 
@@ -35,7 +44,12 @@ func (a *App) Start() error {
 
 	fmt.Println("Connect to database...")
 
-	a.db, err = database.Connect(a.configs.Database)
+	a.db, err = database.Connect(
+		getEnv("DB_USER", "tgpt"),
+		getEnv("DB_PASSWORD", "change_me"),
+		getEnv("DB_HOST", "postgres:5432"),
+		getEnv("DB_TABLE", "tgpt"),
+	)
 
 	if err != nil {
 		return err

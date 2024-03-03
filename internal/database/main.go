@@ -1,7 +1,7 @@
 package database
 
 import (
-	"TelegramGPT/internal/config"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -15,8 +15,8 @@ type Executor interface {
 	Get(dest interface{}, query string, args ...interface{}) error
 }
 
-func Connect(config config.DatabaseConfig) (*sqlx.DB, error) {
-	connConfig, err := pgx.ParseConfig(config.Url)
+func Connect(username string, password string, host string, table string) (*sqlx.DB, error) {
+	connConfig, err := pgx.ParseConfig(fmt.Sprintf("postgres://%s:%s@%s/%s", username, password, host, table))
 
 	if err != nil {
 		return nil, err

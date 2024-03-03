@@ -1,0 +1,48 @@
+version: "3.9"
+services:
+  bot:
+    image: ghcr.io/iskonstantin/telegram-gpt-runner:latest
+    depends_on:
+      - migrator
+    environment:
+      DB_HOST: "tgpt"
+      DB_USER: "tgpt"
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_TABLE: "tgpt"
+    restart: unless-stopped
+    volumes:
+      - ./configs:/gpt-bot/configs
+    networks:
+      tgptnet:
+        aliases:
+          - bot
+  migrator:
+    image: ghcr.io/iskonstantin/telegram-gpt-migrator:latest
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: "tgpt"
+      DB_USER: "tgpt"
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_TABLE: "tgpt"
+      DBSSL: "false"
+    networks:
+      tgptnet:
+        aliases:
+          - migrator
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "tgpt"
+      POSTGRES_USER: "tgpt"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      tgptnet:
+        aliases:
+          - postgres
+networks:
+  tgptnet:
