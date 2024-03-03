@@ -1,0 +1,10 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "tgpt"
+      POSTGRES_USER: "tgpt"
+      POSTGRES_PASSWORD: "change_me"
+    ports:
+      - "5432:5432"
