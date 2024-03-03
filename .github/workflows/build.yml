@@ -34,7 +34,7 @@ jobs:
           context: .
           push: true
           target: runner
-          tags: ghcr.io/isKONSTANTIN/telegram-gpt-runner:latest
+          tags: ghcr.io/iskonstantin/telegram-gpt-runner:latest
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
 
@@ -61,6 +61,6 @@ jobs:
           context: .
           push: true
           target: migrator
-          tags: ghcr.io/isKONSTANTIN/telegram-gpt-migrator:latest
+          tags: ghcr.io/iskonstantin/telegram-gpt-migrator:latest
           labels: |
             org.opencontainers.image.source=${{ github.event.repository.html_url }}
