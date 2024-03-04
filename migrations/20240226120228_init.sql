@@ -1,5 +1,5 @@
--- +goose-darwin-amd64 Up
--- +goose-darwin-amd64 StatementBegin
+-- +goose Up
+-- +goose StatementBegin
 create table if not exists messages
 (
     id                  serial primary key,
@@ -40,9 +40,9 @@ create table if not exists ai_presets
 
 create index idx_ai_presets on ai_presets (chat_id, tag);
 
--- +goose-darwin-amd64 StatementEnd
+-- +goose StatementEnd
 
--- +goose-darwin-amd64 Down
--- +goose-darwin-amd64 StatementBegin
+-- +goose Down
+-- +goose StatementBegin
 
--- +goose-darwin-amd64 StatementEnd
+-- +goose StatementEnd
