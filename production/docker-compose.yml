@@ -5,7 +5,7 @@ services:
     depends_on:
       - migrator
     environment:
-      DB_HOST: "tgpt"
+      DB_HOST: "postgres:5432"
       DB_USER: "tgpt"
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_TABLE: "tgpt"
@@ -21,11 +21,11 @@ services:
     depends_on:
       - postgres
     environment:
-      DB_HOST: "tgpt"
+      DB_HOST: "postgres:5432"
       DB_USER: "tgpt"
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_TABLE: "tgpt"
-      DBSSL: "false"
+      DB_SSL: "disable"
     networks:
       tgptnet:
         aliases:
@@ -39,6 +39,11 @@ services:
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
       - ./database:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U tgpt -d tgpt
+      interval: 10s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
     networks:
       tgptnet:
