@@ -19,9 +19,11 @@ services:
   migrator:
     image: ghcr.io/iskonstantin/telegram-gpt-migrator:latest
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      DB_HOST: "postgres:5432"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
       DB_USER: "tgpt"
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_TABLE: "tgpt"
