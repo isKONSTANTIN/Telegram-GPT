@@ -31,7 +31,7 @@ RUN git clone -b v3.18.0 https://github.com/pressly/goose
 WORKDIR /goose
 
 RUN go mod download
-RUN go build -tags='no_mysql no_sqlite3 no_ydb no_duckdb' ./cmd/goose
+RUN go build ./cmd/goose
 
 
 FROM alpine:3.14 as runner
