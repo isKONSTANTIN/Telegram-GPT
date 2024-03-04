@@ -33,7 +33,6 @@ func InitBot(
 	}
 
 	bot, err := telebot.NewBot(pref)
-
 	if err != nil {
 		return nil, err
 	}
