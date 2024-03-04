@@ -127,14 +127,22 @@ func (b *GPTBot) onText(c telebot.Context) error {
 		return err
 	}
 
-	sentMessage, err := b.bot.Reply(c.Message(), answer, telebot.ModeMarkdown)
-	if err != nil {
-		return err
-	}
+	for i := 0; i < len(answer); i += 4024 {
+		end := i + 4024
+		if end > len(answer) {
+			end = len(answer)
+		}
+		chunk := answer[i:end]
 
-	err = b.messagesRepo.AddMessage(sentMessage.Text, openai.ChatMessageRoleAssistant, int64(sentMessage.ID), chatId, *contextUUID)
-	if err != nil {
-		return err
+		sentMessage, err := b.bot.Reply(c.Message(), chunk, telebot.ModeMarkdown)
+		if err != nil {
+			return err
+		}
+
+		err = b.messagesRepo.AddMessage(sentMessage.Text, openai.ChatMessageRoleAssistant, int64(sentMessage.ID), chatId, *contextUUID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
