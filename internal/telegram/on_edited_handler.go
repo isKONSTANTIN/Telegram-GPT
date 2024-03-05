@@ -2,10 +2,12 @@ package telegram
 
 import (
 	"TelegramGPT/internal/database"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sashabaranov/go-openai"
 	"gopkg.in/telebot.v3"
 	"slices"
+	"time"
 )
 
 func (b *GPTBot) onEdit(c telebot.Context) error {
@@ -49,15 +51,37 @@ func (b *GPTBot) onEdit(c telebot.Context) error {
 		return nil
 	}
 
-	_ = c.Notify(telebot.Typing)
+	typingStatus := true
+
+	go func() {
+		for typingStatus {
+			err := c.Notify(telebot.Typing)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			time.Sleep(3 * time.Second)
+		}
+	}()
 
 	newText, err := b.generator.Continue(allMessages)
+	typingStatus = false
 
 	if err != nil {
 		return err
 	}
 
-	editedMessage, err := b.bot.Edit(allMessages[allMessagesLastIndex], newText)
+	lastMessageIsFile := len(allMessages[allMessagesLastIndex].Text) > 4096
+	var editedMessage *telebot.Message
+
+	var content interface{}
+
+	if lastMessageIsFile {
+		content = prepareDocument(newText)
+	} else {
+		content = newText
+	}
+
+	editedMessage, err = b.bot.Edit(allMessages[allMessagesLastIndex], content, telebot.ModeMarkdown)
 
 	if err != nil {
 		return err

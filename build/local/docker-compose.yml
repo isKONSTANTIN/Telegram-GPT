@@ -1,0 +1,27 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "tgpt"
+      POSTGRES_USER: "tgpt"
+      POSTGRES_PASSWORD: "change_me"
+    healthcheck:
+      test: pg_isready -U tgpt -d tgpt
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    network_mode: "host"
+  migrator:
+    image: ghcr.io/iskonstantin/telegram-gpt-migrator:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "5432"
+      DB_USER: "tgpt"
+      DB_PASSWORD: "change_me"
+      DB_TABLE: "tgpt"
+      DB_SSL: "disable"
+    network_mode: "host"

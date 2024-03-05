@@ -78,7 +78,7 @@ func (b *GPTBot) init() {
 			"/del_preset <tag> - delete preset\n" +
 			"/edit_preset <tag> <new preset text> - edit preset\n" +
 			"/list_presets - presets list\n" +
-			"/imagine <resolution 0-4> <prompt> - imagine image",
+			"/imagine <<horizontal/vertical> <prompt> | <horizontal/vertical> [prompt] with reply to message> - imagine image",
 		)
 	})
 

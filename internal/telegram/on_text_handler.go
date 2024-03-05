@@ -2,12 +2,16 @@ package telegram
 
 import (
 	"TelegramGPT/internal/database"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sashabaranov/go-openai"
 	"gopkg.in/telebot.v3"
 	"strings"
+	"time"
 )
 
 func findValidTag(message string) (string, error) {
@@ -120,30 +124,53 @@ func (b *GPTBot) onText(c telebot.Context) error {
 		return err
 	}
 
-	_ = c.Notify(telebot.Typing)
+	typingStatus := true
+
+	go func() {
+		for typingStatus {
+			err := c.Notify(telebot.Typing)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			time.Sleep(3 * time.Second)
+		}
+	}()
 
 	answer, err := b.generator.Continue(messages)
+	typingStatus = false
+
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < len(answer); i += 4024 {
-		end := i + 4024
-		if end > len(answer) {
-			end = len(answer)
-		}
-		chunk := answer[i:end]
+	var content interface{}
 
-		sentMessage, err := b.bot.Reply(c.Message(), chunk, telebot.ModeMarkdown)
-		if err != nil {
-			return err
-		}
+	if len(answer) > 4096 {
+		content = prepareDocument(answer)
+	} else {
+		content = answer
+	}
 
-		err = b.messagesRepo.AddMessage(sentMessage.Text, openai.ChatMessageRoleAssistant, int64(sentMessage.ID), chatId, *contextUUID)
-		if err != nil {
-			return err
-		}
+	sentMessage, err := b.bot.Reply(c.Message(), content, telebot.ModeMarkdown)
+	if err != nil {
+		return err
+	}
+
+	err = b.messagesRepo.AddMessage(answer, openai.ChatMessageRoleAssistant, int64(sentMessage.ID), chatId, *contextUUID)
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func prepareDocument(text string) *telebot.Document {
+	file := telebot.FromReader(strings.NewReader(text))
+	contentSum := sha256.Sum256([]byte(text))
+	filename := "response_" + hex.EncodeToString(contentSum[:])[:5] + ".md"
+
+	return &telebot.Document{
+		File:     file,
+		FileName: filename,
+	}
 }
