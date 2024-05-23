@@ -71,6 +71,7 @@ func (b *GPTBot) init() {
 	userGroup.Handle("/del_preset", b.deletePresetCommand)
 	userGroup.Handle("/edit_preset", b.editPresetCommand)
 	userGroup.Handle("/list_presets", b.listPresetCommand)
+	userGroup.Handle("/delete", b.deleteCommand)
 
 	userGroup.Handle("/imagine", b.imagineCommand)
 

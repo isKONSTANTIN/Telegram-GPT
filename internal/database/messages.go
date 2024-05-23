@@ -69,3 +69,11 @@ func (r *MessagesRepo) GetMessages(contextUUID pgtype.UUID) ([]Message, error) {
 
 	return messages, nil
 }
+
+func (r *MessagesRepo) RemoveMessages(contextUUID pgtype.UUID) error {
+	_, err := r.executor.Exec(
+		"DELETE FROM messages WHERE context_uuid = $1",
+		contextUUID)
+
+	return err
+}
