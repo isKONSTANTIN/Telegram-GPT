@@ -63,6 +63,7 @@ func (b *GPTBot) init() {
 	userGroup.Use(b.whitelistMiddleware)
 	userGroup.Handle(telebot.OnText, b.onText)
 	userGroup.Handle(telebot.OnEdited, b.onEdit)
+	userGroup.Handle(telebot.OnDocument, b.onDocument)
 
 	userGroup.Handle("/start", b.startCommand)
 

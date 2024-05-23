@@ -2,67 +2,38 @@ package telegram
 
 import (
 	"TelegramGPT/internal/database"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/sashabaranov/go-openai"
 	"gopkg.in/telebot.v3"
+	"io"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
-func findValidTag(message string) (string, error) {
-	if len(message) == 0 {
-		return "", errors.New("message length == 0")
+func (b *GPTBot) onDocument(c telebot.Context) error {
+	doc := c.Message().Document
+	if doc.FileSize > 256*1024 { // 256 KiB
+		return c.Reply("File is too big")
 	}
 
-	if message[0] == '#' {
-		index := strings.Index(message, " ")
-
-		if index == -1 {
-			return message[1:], nil
-		}
-
-		return message[1:index], nil
-	}
-
-	lastWord := message[strings.LastIndex(message, " ")+1:]
-
-	if lastWord[0] == '#' {
-		return lastWord[1:], nil
-	}
-
-	return "", errors.New("not found")
-}
-
-func (b *GPTBot) cutCustomPresetIfExist(text string, chatId int64) (*database.Preset, string) {
-	tag, err := findValidTag(text)
+	docText, err := b.getTextFromDocument(doc)
 
 	if err != nil {
-		return nil, text
+		return err
 	}
 
-	preset, err := b.aiPresetsRepo.GetPresetByTag(tag, chatId)
-
-	if err != nil {
-		return nil, text
+	if !utf8.ValidString(docText) {
+		return c.Reply("File is invalid")
 	}
 
-	return preset, strings.ReplaceAll(text, "#"+tag+" ", "")
-}
+	text := c.Message().Caption
 
-func (b *GPTBot) removeUsernameFromMessage(text string) string {
-	return strings.ReplaceAll(text, "@"+b.bot.Me.Username+" ", "")
-}
-
-func (b *GPTBot) onText(c telebot.Context) error {
-	startWithMe := strings.HasPrefix(c.Message().Text, "@"+b.bot.Me.Username)
+	startWithMe := strings.HasPrefix(text, "@"+b.bot.Me.Username)
 	replyToMe := c.Message().IsReply() && c.Message().ReplyTo.Sender.ID == b.bot.Me.ID
-
-	text := c.Message().Text
 
 	if c.Chat().Type != telebot.ChatPrivate {
 		if !startWithMe && !replyToMe {
@@ -82,6 +53,8 @@ func (b *GPTBot) onText(c telebot.Context) error {
 	var presetText string
 
 	preset, text = b.cutCustomPresetIfExist(text, chatId)
+
+	var needAnswer = false
 
 	if replyTo != nil && preset == nil {
 		message, _ := b.messagesRepo.GetMessage(int64(replyTo.ID), chatId)
@@ -115,12 +88,23 @@ func (b *GPTBot) onText(c telebot.Context) error {
 			if err != nil {
 				return err
 			}
+
+			needAnswer = true
 		}
 	}
 
-	err := b.messagesRepo.AddMessage(text, openai.ChatMessageRoleUser, int64(c.Message().ID), chatId, *contextUUID)
+	err = b.messagesRepo.AddMessage(text+" (User sent document: "+docText+")", openai.ChatMessageRoleUser, int64(c.Message().ID), chatId, *contextUUID)
+
 	if err != nil {
 		return err
+	}
+
+	if len(text) > 0 {
+		needAnswer = true
+	}
+
+	if !needAnswer {
+		return nil
 	}
 
 	messages, err := b.messagesRepo.GetMessages(*contextUUID)
@@ -168,13 +152,31 @@ func (b *GPTBot) onText(c telebot.Context) error {
 	return nil
 }
 
-func prepareDocument(text string) *telebot.Document {
-	file := telebot.FromReader(strings.NewReader(text))
-	contentSum := sha256.Sum256([]byte(text))
-	filename := "response_" + hex.EncodeToString(contentSum[:])[:5] + ".md"
-
-	return &telebot.Document{
-		File:     file,
-		FileName: filename,
+func (b *GPTBot) getTextFromDocument(doc *telebot.Document) (string, error) {
+	if doc == nil {
+		return "", errors.New("document is nil")
 	}
+
+	resp, err := b.bot.File(&doc.File)
+	if err != nil {
+		return "", err
+	}
+
+	text, err := readCloserToString(resp)
+
+	if err != nil {
+		return "", err
+	}
+
+	return text, nil
+}
+
+func readCloserToString(rc io.ReadCloser) (string, error) {
+	builder := new(strings.Builder)
+	_, err := io.Copy(builder, rc)
+	if err != nil {
+		return "", err
+	}
+
+	return builder.String(), nil
 }
