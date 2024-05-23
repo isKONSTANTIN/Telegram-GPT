@@ -16,6 +16,7 @@ type Message struct {
 	MessageId   int64       `db:"message_id"`
 	ChatId      int64       `db:"chat_id"`
 	ContextUUID pgtype.UUID `db:"context_uuid"`
+	Type        string      `db:"type"`
 }
 
 func (m Message) MessageSig() (string, int64) {
@@ -30,6 +31,14 @@ func (r *MessagesRepo) AddMessage(text string, role string, messageId int64, cha
 	_, err := r.executor.Exec(
 		"INSERT INTO messages (text, role, message_id, chat_id, context_uuid) VALUES ($1, $2, $3, $4, $5)",
 		text, role, messageId, chatId, context)
+
+	return err
+}
+
+func (r *MessagesRepo) AddImageURL(url string, role string, messageId int64, chatId int64, context pgtype.UUID) error {
+	_, err := r.executor.Exec(
+		"INSERT INTO messages (text, role, message_id, chat_id, context_uuid, type) VALUES ($1, $2, $3, $4, $5, 'image')",
+		url, role, messageId, chatId, context)
 
 	return err
 }

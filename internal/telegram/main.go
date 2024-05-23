@@ -64,6 +64,7 @@ func (b *GPTBot) init() {
 	userGroup.Handle(telebot.OnText, b.onText)
 	userGroup.Handle(telebot.OnEdited, b.onEdit)
 	userGroup.Handle(telebot.OnDocument, b.onDocument)
+	userGroup.Handle(telebot.OnPhoto, b.onPhoto)
 
 	userGroup.Handle("/start", b.startCommand)
 

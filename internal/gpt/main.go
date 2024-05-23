@@ -49,9 +49,31 @@ func mapMessages(messages []database.Message) []openai.ChatCompletionMessage {
 	result := make([]openai.ChatCompletionMessage, len(messages))
 
 	for i, message := range messages {
-		result[i] = openai.ChatCompletionMessage{
-			Role:    message.Role,
-			Content: message.Text,
+		switch message.Type {
+		case "text":
+			{
+				result[i] = openai.ChatCompletionMessage{
+					Role:    message.Role,
+					Content: message.Text,
+				}
+			}
+		case "image":
+			{
+				result[i] = openai.ChatCompletionMessage{
+					Role: message.Role,
+					MultiContent: []openai.ChatMessagePart{
+						{
+							Type: "image_url",
+							Text: "",
+							ImageURL: &openai.ChatMessageImageURL{
+								URL:    message.Text,
+								Detail: "",
+							},
+						},
+					},
+				}
+			}
+
 		}
 	}
 
