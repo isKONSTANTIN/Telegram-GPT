@@ -45,7 +45,7 @@ func (r *MessagesRepo) AddImageURL(url string, role string, messageId int64, cha
 
 func (r *MessagesRepo) EditMessage(messageId int64, chatId int64, role string, text string) error {
 	_, err := r.executor.Exec(
-		"UPDATE messages SET text = $4 WHERE message_id = $1 AND chat_id = $2 AND role = $3",
+		"UPDATE messages SET text = $4 WHERE message_id = $1 AND chat_id = $2 AND role = $3 and type = 'text'",
 		messageId, chatId, role, text)
 
 	return err

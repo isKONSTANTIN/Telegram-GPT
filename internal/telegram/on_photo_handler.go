@@ -68,6 +68,17 @@ func (b *GPTBot) onPhoto(c telebot.Context) error {
 		if replyTo != nil {
 			err = b.messagesRepo.AddMessage("Forwarded message: "+replyTo.Text, openai.ChatMessageRoleUser, int64(replyTo.ID), chatId, *contextUUID)
 
+			if replyTo.Photo != nil {
+				f, _ := b.bot.FileByID(replyTo.Photo.FileID)
+
+				err = b.messagesRepo.AddImageURL(
+					"https://api.telegram.org/file/bot"+b.bot.Token+"/"+f.FilePath,
+					openai.ChatMessageRoleUser,
+					int64(replyTo.ID),
+					chatId,
+					*contextUUID)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -75,6 +86,17 @@ func (b *GPTBot) onPhoto(c telebot.Context) error {
 			needAnswer = true
 		}
 	}
+
+	if len(text) > 0 {
+		err := b.messagesRepo.AddMessage(text, openai.ChatMessageRoleUser, int64(c.Message().ID), chatId, *contextUUID)
+
+		if err != nil {
+			return err
+		}
+
+		needAnswer = true
+	}
+
 	f, _ := b.bot.FileByID(photo.FileID)
 
 	err := b.messagesRepo.AddImageURL(
@@ -86,10 +108,6 @@ func (b *GPTBot) onPhoto(c telebot.Context) error {
 
 	if err != nil {
 		return err
-	}
-
-	if len(text) > 0 {
-		needAnswer = true
 	}
 
 	if !needAnswer {

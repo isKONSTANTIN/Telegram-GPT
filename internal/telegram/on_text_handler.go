@@ -112,6 +112,17 @@ func (b *GPTBot) onText(c telebot.Context) error {
 		if replyTo != nil {
 			err = b.messagesRepo.AddMessage("Forwarded message: "+replyTo.Text, openai.ChatMessageRoleUser, int64(replyTo.ID), chatId, *contextUUID)
 
+			if replyTo.Photo != nil {
+				f, _ := b.bot.FileByID(replyTo.Photo.FileID)
+
+				err = b.messagesRepo.AddImageURL(
+					"https://api.telegram.org/file/bot"+b.bot.Token+"/"+f.FilePath,
+					openai.ChatMessageRoleUser,
+					int64(replyTo.ID),
+					chatId,
+					*contextUUID)
+			}
+
 			if err != nil {
 				return err
 			}
