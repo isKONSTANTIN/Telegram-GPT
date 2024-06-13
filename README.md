@@ -62,4 +62,4 @@ The main.json file contains the following key settings:
 
 ## Support
 
-If you have any questions or issues related to the use of the bot, please create an issue in the project repository on GitHub or [ask me directly](https://t.me/isKONSTANTIN) (English or Russian)
+If you have any questions or issues related to the use of the bot, please create an issue in the project repository on GitHub or [ask me directly](https://t.me/cotantin) (English or Russian)
